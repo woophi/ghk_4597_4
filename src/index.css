@@ -12,4 +12,5 @@ body {
 
 * {
   box-sizing: border-box;
+  --calendar-selected-background: #EF3124
 }

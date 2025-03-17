@@ -41,10 +41,15 @@ const box = style({
   gap: '1rem',
 });
 
+export const btmContent = style({
+  padding: 0,
+});
+
 export const appSt = {
   bottomBtn,
   container,
   banner,
   swSlide,
   box,
+  btmContent,
 };

@@ -1,35 +1,76 @@
 import { ButtonMobile } from '@alfalab/core-components/button/mobile';
+import { CalendarMobile } from '@alfalab/core-components/calendar/mobile';
 import { Gap } from '@alfalab/core-components/gap';
 import { Input } from '@alfalab/core-components/input';
+import { SelectMobile } from '@alfalab/core-components/select/mobile';
+import { Switch } from '@alfalab/core-components/switch';
 import { Tag } from '@alfalab/core-components/tag';
 import { Typography } from '@alfalab/core-components/typography';
-import { ChevronRightMIcon } from '@alfalab/icons-glyph/ChevronRightMIcon';
-import { useState } from 'react';
+import { CalendarMIcon } from '@alfalab/icons-glyph/CalendarMIcon';
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import rubIcon from './assets/rub.png';
 import { LS, LSKeys } from './ls';
 import { appSt } from './style.css';
 import { ThxSpinner } from './thx/ThxLayout';
-
 const min = 2000;
 const max = 3_000_000;
 
-const addSome = 36_000;
-
 const chips = [2000, 5000, 15000, 25000];
 
-const sduiLink =
-  'alfabank://sdui_screen?screenName=InvestmentLongread&fromCurrent=true&endpoint=v1/invest-main-screen-view/investment-longread/45034%3flocation=AM%26campaignCode=GH';
+type OptionKey = 'per_month' | 'per_week' | 'per_quarter' | 'per_annual';
+
+const OPTIONS = [
+  { key: 'per_month', content: 'Раз в месяц' },
+  { key: 'per_week', content: 'Раз в неделю' },
+  { key: 'per_quarter', content: 'Раз в квартал' },
+  { key: 'per_annual', content: 'Раз в год' },
+];
 
 export const App = () => {
   const [loading, setLoading] = useState(false);
+  const [checked, setChecked] = useState(false);
   const [error, setError] = useState('');
-  const [sum, setSum] = useState<string>('');
+  const [errorAutoSum, setErrorAutomSum] = useState('');
+  const [sum, setSum] = useState('');
+  const [autoSum, setAutoSum] = useState('');
+  const [perItem, setPerItem] = useState<OptionKey>('per_month');
   const [thxShow, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
+  const [openBs, setOpenBs] = useState(false);
+  const [payDate, setPayDate] = useState(dayjs().add(1, 'month').toDate().toISOString());
+
+  useEffect(() => {
+    setAutoSum(sum);
+  }, [sum]);
+
+  useEffect(() => {
+    switch (perItem) {
+      case 'per_month':
+        setPayDate(dayjs().add(1, 'month').toDate().toISOString());
+        break;
+      case 'per_week':
+        setPayDate(dayjs().add(1, 'week').toDate().toISOString());
+        break;
+      case 'per_quarter':
+        setPayDate(dayjs().add(3, 'month').toDate().toISOString());
+        break;
+      case 'per_annual':
+        setPayDate(dayjs().add(1, 'year').toDate().toISOString());
+        break;
+
+      default:
+        break;
+    }
+  }, [perItem]);
 
   const submit = () => {
     if (!sum) {
       setError('Введите сумму взноса');
+      return;
+    }
+    if (!autoSum) {
+      setErrorAutomSum('Введите сумму автоплатежа');
       return;
     }
 
@@ -46,6 +87,13 @@ export const App = () => {
 
     setSum(e.target.value);
   };
+  const handleChangeInputAutoSum = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (errorAutoSum) {
+      setErrorAutomSum('');
+    }
+
+    setAutoSum(e.target.value);
+  };
   const handleBlurInput = () => {
     const value = Number(sum);
 
@@ -57,10 +105,6 @@ export const App = () => {
       setSum('3000000');
       return;
     }
-  };
-
-  const goToSdui = () => {
-    window.location.replace(sduiLink);
   };
 
   if (thxShow) {
@@ -113,25 +157,50 @@ export const App = () => {
           </Swiper>
         </div>
 
-        <div className={appSt.box} onClick={goToSdui}>
-          <Typography.Text view="secondary-medium">
-            {Number(sum) >= addSome ? (
-              'Условия выполнены. После пополнения вам начислят кэшбэк в подарок'
-            ) : sum ? (
-              <>
-                Пополните еще на <span style={{ fontWeight: 700 }}>{(addSome - Number(sum)).toLocaleString('ru')} ₽</span> –
-                получите кэшбэк в подарок. Действует до 15.04
-              </>
-            ) : (
-              <>
-                Пополните на <span style={{ fontWeight: 700 }}>{addSome.toLocaleString('ru')}</span> – получите кэшбэк в
-                подарок. Действует до 15.04
-              </>
-            )}
-          </Typography.Text>
+        <Switch
+          block
+          reversed
+          checked={checked}
+          label="Пополнять регулярно"
+          onChange={() => setChecked(prevState => !prevState)}
+        />
 
-          <ChevronRightMIcon />
-        </div>
+        {checked && (
+          <>
+            <Input
+              type="number"
+              label="Сумма автоплатежа"
+              labelView="outer"
+              error={errorAutoSum}
+              value={autoSum}
+              onChange={handleChangeInputAutoSum}
+              block
+            />
+
+            <SelectMobile
+              options={OPTIONS}
+              label="Буду вносить"
+              labelView="outer"
+              block
+              selected={perItem}
+              onChange={p => setPerItem((p.selected?.key ?? 'per_month') as OptionKey)}
+            />
+
+            <Input
+              label="Первый платёж"
+              labelView="outer"
+              value={payDate ? dayjs(payDate).format('DD.MM.YYYY') : undefined}
+              disabled={!perItem}
+              block
+              rightAddons={<CalendarMIcon color="#898991" />}
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpenBs(true);
+              }}
+            />
+          </>
+        )}
       </div>
       <Gap size={96} />
 
@@ -140,6 +209,17 @@ export const App = () => {
           Продолжить
         </ButtonMobile>
       </div>
+
+      <CalendarMobile
+        value={payDate ? dayjs(payDate).toDate().getTime() : undefined}
+        selectorView={'full'}
+        yearsAmount={2}
+        onClose={() => setOpenBs(false)}
+        open={openBs}
+        minDate={dayjs().toDate().getTime()}
+        maxDate={dayjs().add(2, 'year').toDate().getTime()}
+        onChange={date => setPayDate(dayjs(date).toDate().toISOString())}
+      />
     </>
   );
 };
