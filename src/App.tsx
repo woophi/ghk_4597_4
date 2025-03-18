@@ -14,6 +14,7 @@ import rubIcon from './assets/rub.png';
 import { LS, LSKeys } from './ls';
 import { appSt } from './style.css';
 import { ThxSpinner } from './thx/ThxLayout';
+import { sendDataToGA } from './utils/events';
 const min = 2000;
 const max = 3_000_000;
 
@@ -39,6 +40,12 @@ export const App = () => {
   const [thxShow, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
   const [openBs, setOpenBs] = useState(false);
   const [payDate, setPayDate] = useState(dayjs().add(1, 'month').toDate().toISOString());
+
+  useEffect(() => {
+    if (!LS.getItem(LSKeys.UserId, null)) {
+      LS.setItem(LSKeys.UserId, Date.now());
+    }
+  }, []);
 
   useEffect(() => {
     setAutoSum(sum);
@@ -75,9 +82,15 @@ export const App = () => {
     }
 
     setLoading(true);
-    // LS.setItem(LSKeys.ShowThx, true);
-    setThx(true);
-    setLoading(false);
+    sendDataToGA({
+      auto: checked ? `[${perItem.replace('per_', '')},${autoSum}]` : '[]',
+      sum: Number(sum),
+      id: LS.getItem(LSKeys.UserId, 0) as number,
+    }).then(() => {
+      // LS.setItem(LSKeys.ShowThx, true);
+      setThx(true);
+      setLoading(false);
+    });
   };
 
   const handleChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +118,11 @@ export const App = () => {
       setSum('3000000');
       return;
     }
+  };
+
+  const handleSwitchToggle = () => {
+    window.gtag('event', 'switch_4597_var4');
+    setChecked(prevState => !prevState);
   };
 
   if (thxShow) {
@@ -157,13 +175,7 @@ export const App = () => {
           </Swiper>
         </div>
 
-        <Switch
-          block
-          reversed
-          checked={checked}
-          label="Пополнять регулярно"
-          onChange={() => setChecked(prevState => !prevState)}
-        />
+        <Switch block reversed checked={checked} label="Пополнять регулярно" onChange={handleSwitchToggle} />
 
         {checked && (
           <>
