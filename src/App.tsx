@@ -87,7 +87,7 @@ export const App = () => {
       sum: Number(sum),
       id: LS.getItem(LSKeys.UserId, 0) as number,
     }).then(() => {
-      // LS.setItem(LSKeys.ShowThx, true);
+      LS.setItem(LSKeys.ShowThx, true);
       setThx(true);
       setLoading(false);
     });
@@ -161,6 +161,7 @@ export const App = () => {
           onChange={handleChangeInput}
           onBlur={handleBlurInput}
           block
+          pattern="[0-9]*"
         />
 
         <div>
@@ -187,6 +188,7 @@ export const App = () => {
               value={autoSum}
               onChange={handleChangeInputAutoSum}
               block
+              pattern="[0-9]*"
             />
 
             <SelectMobile
