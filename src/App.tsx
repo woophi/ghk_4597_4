@@ -34,7 +34,7 @@ export const App = () => {
   const [checked, setChecked] = useState(true);
   const [error, setError] = useState('');
   const [errorAutoSum, setErrorAutomSum] = useState('');
-  const [sum, setSum] = useState('');
+  const [sum, setSum] = useState('2000');
   const [autoSum, setAutoSum] = useState('');
   const [perItem, setPerItem] = useState<OptionKey>('per_month');
   const [thxShow, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
