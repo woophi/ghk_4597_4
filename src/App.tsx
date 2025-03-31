@@ -18,7 +18,7 @@ import { sendDataToGA } from './utils/events';
 const min = 2000;
 const max = 3_000_000;
 
-const chips = [2000, 5000, 15000, 36000];
+const chips = [10_000, 36_000, 50_000, 72_000];
 
 type OptionKey = 'per_month' | 'per_week' | 'per_quarter' | 'per_annual';
 
